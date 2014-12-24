@@ -23,22 +23,22 @@ teardown() {
 }
 
 @test "docker-registry-proxy requires the AUTH_CREDENTIALS environment variable to be set" {
-  export SERVER_NAME=foobar.com
+  export REGISTRY_SERVER=localhost:5000
   run timeout 1 /bin/bash run-docker-registry-proxy.sh
   [ "$status" -eq 1 ]
   [[ "$output" =~ "AUTH_CREDENTIALS" ]]
 }
 
-@test "docker-registry-proxy requires the SERVER_NAME environment variable to be set" {
-  export AUTH_CREDENTIALS=foobar
+@test "docker-registry-proxy requires the REGISTRY_SERVER environment variable to be set" {
+  export AUTH_CREDENTIALS=foobar:password
   run timeout 1 /bin/bash run-docker-registry-proxy.sh
   [ "$status" -eq 1 ]
-  [[ "$output" =~ "SERVER_NAME" ]]
+  [[ "$output" =~ "REGISTRY_SERVER" ]]
 }
 
 @test "docker-registry-proxy requires a key in /etc/nginx/ssl" {
-  export AUTH_CREDENTIALS=foobar
-  export SERVER_NAME=foobar.com
+  export AUTH_CREDENTIALS=foobar:password
+  export REGISTRY_SERVER=foobar.com:5000
   rm /etc/nginx/ssl/docker-registry-proxy.key
   run timeout 1 /bin/bash run-docker-registry-proxy.sh
   [ "$status" -eq 1 ]
@@ -46,8 +46,8 @@ teardown() {
 }
 
 @test "docker-registry-proxy requires a certificate in /etc/nginx/ssl" {
-  export AUTH_CREDENTIALS=foobar
-  export SERVER_NAME=foobar.com
+  export AUTH_CREDENTIALS=foobar:password
+  export REGISTRY_SERVER=foobar.com:5000
   rm /etc/nginx/ssl/docker-registry-proxy.crt
   run timeout 1 /bin/bash run-docker-registry-proxy.sh
   [ "$status" -eq 1 ]

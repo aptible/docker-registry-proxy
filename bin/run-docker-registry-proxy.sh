@@ -1,6 +1,6 @@
 #!/bin/bash
 : ${AUTH_CREDENTIALS:?"Error: environment variable AUTH_CREDENTIALS should be populated with a comma-separated list of user:password pairs. Example: \"admin:pa55w0rD\"."}
-: ${SERVER_NAME:?"Error: environment variable SERVER_NAME should container the FQDN of the server, e.g., 'registry.example.com'."}
+: ${REGISTRY_SERVER:?"Error: environment variable REGISTRY_SERVER should contain the host and port of the Docker registry server, e.g., 'localhost:5000'."}
 
 if [ ! -f /etc/nginx/ssl/docker-registry-proxy.crt ]; then
     echo "Error: /etc/nginx/ssl/docker-registry-proxy.crt does not exist. This file should be mapped in" \
@@ -12,6 +12,9 @@ if [ ! -f /etc/nginx/ssl/docker-registry-proxy.key ]; then
          "to the container using a flag like '-v /local/path/to/keypair:/etc/nginx/ssl'"
     exit 1
 fi
+
+# Parse the NGiNX server name from the certificate
+export SERVER_NAME=`openssl x509 -noout -subject -in /etc/nginx/ssl/docker-registry-proxy.crt | sed -n '/^subject/s/^.*CN=//p'`
 
 # Parse auth credentials, add to a htpasswd file.
 AUTH_PARSER="

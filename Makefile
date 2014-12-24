@@ -1,5 +1,5 @@
 DOCKER = docker
-REPO = quay.io/aptible/docker-registry-proxy
+REPO = quay.io/aptible/registry-proxy
 
 TAG = $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 ifeq ($(TAG), master)

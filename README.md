@@ -1,9 +1,9 @@
 # ![](https://gravatar.com/avatar/11d3bc4c3163e3d238d558d5c9d98efe?s=64) aptible/docker-registry-proxy
 
-[![Docker Repository on Quay.io](https://quay.io/repository/aptible/docker-registry-proxy/status)](https://quay.io/repository/aptible/docker-registry-proxy)
+[![Docker Repository on Quay.io](https://quay.io/repository/aptible/registry-proxy/status)](https://quay.io/repository/aptible/registry-proxy)
 
 An NGiNX proxy for [Docker registries](https://github.com/docker/docker-registry)
-that terminates SSL and requires basic auth.
+that terminates SSL and enforces HTTP basic authentication.
 
 ## Background
 
@@ -28,7 +28,7 @@ Alternatively, you can build the image locally by running `make build`.
 You need three things to run this proxy in front of a Docker registry:
 
 1. A running [Docker registry](https://github.com/docker/docker-registry).
-2. An SSL key pair named `docker-registry-proxy.crt` and `docker-registry-proxy.key`.
+2. A directory containing an SSL key pair named `docker-registry-proxy.crt` and `docker-registry-proxy.key`.
 3. Basic auth credentials in the form "user1:password1,user2:password2".
 
 Once you have everything in the list above, you can launch the registry proxy container.
@@ -37,7 +37,7 @@ local directory `/home/aaron/keys`, and the basic auth credentials you want to u
 are `admin:pa55w0rd`, run:
 
 ```
-docker run -itd -e AUTH_CREDENTIALS=admin:pa55w0rd REGISTRY_SERVER=localhost:5000 -v /home/aaw/keys:/etc/nginx/ssl quay.io/aptible/registry-proxy
+docker run -itd -e AUTH_CREDENTIALS=admin:pa55w0rd -e REGISTRY_SERVER=localhost:5000 -v /home/aaw/keys:/etc/nginx/ssl quay.io/aptible/registry-proxy
 ```
 
 ## Deployment

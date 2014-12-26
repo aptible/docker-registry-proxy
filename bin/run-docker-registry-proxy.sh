@@ -1,7 +1,9 @@
 #!/bin/bash
+# Make sure required environment variables are set.
 : ${AUTH_CREDENTIALS:?"Error: environment variable AUTH_CREDENTIALS should be populated with a comma-separated list of user:password pairs. Example: \"admin:pa55w0rD\"."}
 : ${REGISTRY_SERVER:?"Error: environment variable REGISTRY_SERVER should contain the host and port of the Docker registry server, e.g., 'localhost:5000'."}
 
+# Make sure there's exactly one certificate provided and store its path in CERT_FILE
 NUM_CERTS=`ls -l /etc/nginx/ssl/*.crt | wc -l`
 if [ $NUM_CERTS -eq 0 ]; then
     echo "No certificate file (*.crt) provided in the directory /etc/nginx/ssl."
@@ -12,6 +14,7 @@ elif [ $NUM_CERTS -gt 1 ]; then
 fi
 export CERT_FILE=`find /etc/nginx/ssl -maxdepth 1 -name '*.crt' -print`
 
+# Make sure there's exactly one key provided and store its path in KEY_FILE
 NUM_KEYS=`ls -l /etc/nginx/ssl/*.key | wc -l`
 if [ $NUM_KEYS -eq 0 ]; then
     echo "No key file (*.key) provided in the directory /etc/nginx/ssl."
@@ -22,8 +25,12 @@ elif [ $NUM_KEYS -gt 1 ]; then
 fi
 export KEY_FILE=`find /etc/nginx/ssl -maxdepth 1 -name '*.key' -print`
 
-# Parse the NGiNX server name from the certificate
-export SERVER_NAME=`openssl x509 -noout -subject -in /etc/nginx/ssl/docker-registry-proxy.crt | sed -n '/^subject/s/^.*CN=//p'`
+# Parse the NGiNX server name from the certificate if possible.
+export SERVER_NAME=`openssl x509 -noout -subject -in $CERT_FILE | sed -n '/^subject/s/^.*CN=//p'`
+if [ ! $SERVER_NAME ]; then
+  export SERVER_NAME=example.com
+fi
+
 # Parse auth credentials, add to a htpasswd file.
 AUTH_PARSER="
 create_opt = 'c'
@@ -35,9 +42,11 @@ end"
 ruby -e "$AUTH_PARSER" || \
 (echo "Error creating htpasswd file from credentials '$AUTH_CREDENTIALS'" && exit 1)
 
+# Generate the NGiNX configuration.
 erb -T 2 ./docker-registry-proxy.erb > /etc/nginx/sites-enabled/docker-registry-proxy || \
 (echo "Error creating nginx configuration." && exit 1)
 
+# Start NGiNX, tail error and access logs.
 service nginx start
 touch /var/log/nginx/access.log /var/log/nginx/error.log
 tail -fq /var/log/nginx/access.log /var/log/nginx/error.log

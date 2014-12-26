@@ -52,7 +52,7 @@ docker run -itd -p "$EXTERNAL_PORT":443 \
     -e AUTH_CREDENTIALS=$AUTH_CREDENTIALS \
     -e REGISTRY_SERVER=$REGISTRY_IP:$INTERNAL_PORT \
     -v $KEYPAIR_DIRECTORY:/etc/nginx/ssl \
-    quay.io/aptible/docker-registry-proxy
+    quay.io/aptible/registry-proxy
 ```
 
 ## Deployment

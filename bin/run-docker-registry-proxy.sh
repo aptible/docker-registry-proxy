@@ -43,7 +43,7 @@ ruby -e "$AUTH_PARSER" || \
 (echo "Error creating htpasswd file from credentials '$AUTH_CREDENTIALS'" && exit 1)
 
 # Parse address of registry server from the linked REGISTRY_PORT environment variable.
-REGISTRY_SERVER=${REGISTRY_PORT##*/}
+export REGISTRY_SERVER=${REGISTRY_PORT##*/}
 
 # Generate the NGiNX configuration.
 erb -T 2 ./docker-registry-proxy.erb > /etc/nginx/sites-enabled/docker-registry-proxy || \

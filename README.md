@@ -34,9 +34,8 @@ Once you have everything in the list above, you can launch the registry proxy co
 example:
 
 ```bash
-# Run the Docker registry on port 5000 as a 'local' registry with images stored in /tmp.
-INTERNAL_PORT=5000
-docker run -itd --name docker-registry -p $INTERNAL_PORT:5000 -e SETTINGS_FLAVOR=local registry
+# Run the Docker registry as a 'local' registry with images stored in /tmp.
+docker run -itd --name docker-registry -P -e SETTINGS_FLAVOR=local registry
 
 # EXTERNAL_PORT is the port where this proxy (and therefore, the registry) will be exposed.
 EXTERNAL_PORT=46022
@@ -47,10 +46,11 @@ KEYPAIR_DIRECTORY=/tmp/my-certs
 # AUTH_CREDENTIALS contains one or more user:password pairs, separated by commas.
 AUTH_CREDENTIALS=admin:admin123
 
-REGISTRY_IP=`docker inspect docker-registry | grep -oP "\"IPAddress\": \"\K[^\"]*"`
-docker run -itd -p "$EXTERNAL_PORT":443 \
+# Run the registry proxy container. The registry container must be linked in as
+# 'registry' to allow the proxy to discover the address it's listening to.
+docker run -itd --link docker-registry:registry \
+    -p "$EXTERNAL_PORT":443 \
     -e AUTH_CREDENTIALS=$AUTH_CREDENTIALS \
-    -e REGISTRY_SERVER=$REGISTRY_IP:$INTERNAL_PORT \
     -v $KEYPAIR_DIRECTORY:/etc/nginx/ssl \
     quay.io/aptible/registry-proxy
 ```

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Make sure required environment variables are set.
 : ${AUTH_CREDENTIALS:?"Error: environment variable AUTH_CREDENTIALS should be populated with a comma-separated list of user:password pairs. Example: \"admin:pa55w0rD\"."}
-: ${REGISTRY_SERVER:?"Error: environment variable REGISTRY_SERVER should contain the host and port of the Docker registry server, e.g., 'localhost:5000'."}
+: ${REGISTRY_PORT:?"Error: Missing REGISTRY_PORT environment variable. This variable should be defined by creating a named link 'registry' to another container running a Docker registry."}
 
 # Make sure there's exactly one certificate provided and store its path in CERT_FILE
 NUM_CERTS=`ls -l /etc/nginx/ssl/*.crt | wc -l`
@@ -41,6 +41,9 @@ ENV['AUTH_CREDENTIALS'].split(',').map do |creds|
 end"
 ruby -e "$AUTH_PARSER" || \
 (echo "Error creating htpasswd file from credentials '$AUTH_CREDENTIALS'" && exit 1)
+
+# Parse address of registry server from the linked REGISTRY_PORT environment variable.
+REGISTRY_SERVER=${REGISTRY_PORT##*/}
 
 # Generate the NGiNX configuration.
 erb -T 2 ./docker-registry-proxy.erb > /etc/nginx/sites-enabled/docker-registry-proxy || \

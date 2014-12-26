@@ -42,7 +42,16 @@ teardown() {
   rm /etc/nginx/ssl/docker-registry-proxy.key
   run timeout 1 /bin/bash run-docker-registry-proxy.sh
   [ "$status" -eq 1 ]
-  [[ "$output" =~ "/etc/nginx/ssl/docker-registry-proxy.key" ]]
+  [[ "$output" =~ "No key file" ]]
+}
+
+@test "docker-registry-proxy returns an error if more than one key is provided" {
+  export AUTH_CREDENTIALS=foobar:password
+  export REGISTRY_SERVER=foobar.com:5000
+  touch /etc/nginx/ssl/extra-key.key
+  run timeout 1 /bin/bash run-docker-registry-proxy.sh
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "Multiple key files" ]]
 }
 
 @test "docker-registry-proxy requires a certificate in /etc/nginx/ssl" {
@@ -51,5 +60,14 @@ teardown() {
   rm /etc/nginx/ssl/docker-registry-proxy.crt
   run timeout 1 /bin/bash run-docker-registry-proxy.sh
   [ "$status" -eq 1 ]
-  [[ "$output" =~ "/etc/nginx/ssl/docker-registry-proxy.crt" ]]
+  [[ "$output" =~ "No certificate file" ]]
+}
+
+@test "docker-registry-proxy returns an error if more than one certificate is provided" {
+  export AUTH_CREDENTIALS=foobar:password
+  export REGISTRY_SERVER=foobar.com:5000
+  touch /etc/nginx/ssl/extra-cert.crt
+  run timeout 1 /bin/bash run-docker-registry-proxy.sh
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "Multiple certificate files" ]]
 }

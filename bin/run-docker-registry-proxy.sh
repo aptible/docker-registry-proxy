@@ -1,6 +1,8 @@
 #!/bin/bash
 # Make sure required environment variables are set.
-: ${AUTH_CREDENTIALS:?"Error: environment variable AUTH_CREDENTIALS should be populated with a comma-separated list of user:password pairs. Example: \"admin:pa55w0rD\"."}
+if [ ! -f /etc/nginx/conf.d/docker-registry-proxy.htpasswd ]; then
+  : ${AUTH_CREDENTIALS:?"Error: environment variable AUTH_CREDENTIALS should be populated with a comma-separated list of user:password pairs. Example: \"admin:pa55w0rD\"."}
+fi
 : ${REGISTRY_PORT:?"Error: Missing REGISTRY_PORT environment variable. This variable should be defined by creating a named link 'registry' to another container running a Docker registry."}
 
 # Make sure there's exactly one certificate provided and store its path in CERT_FILE
@@ -32,15 +34,17 @@ if [ ! $SERVER_NAME ]; then
 fi
 
 # Parse auth credentials, add to a htpasswd file.
-AUTH_PARSER="
-create_opt = 'c'
-ENV['AUTH_CREDENTIALS'].split(',').map do |creds|
-  user, password = creds.split(':')
-  %x(htpasswd -b#{create_opt} /etc/nginx/conf.d/docker-registry-proxy.htpasswd #{user} #{password})
-  create_opt = ''
-end"
-ruby -e "$AUTH_PARSER" || \
-(echo "Error creating htpasswd file from credentials '$AUTH_CREDENTIALS'" && exit 1)
+if [ ! -f /etc/nginx/conf.d/docker-registry-proxy.htpasswd ]; then
+    AUTH_PARSER="
+    create_opt = 'c'
+    ENV['AUTH_CREDENTIALS'].split(',').map do |creds|
+      user, password = creds.split(':')
+      %x(htpasswd -b#{create_opt} /etc/nginx/conf.d/docker-registry-proxy.htpasswd #{user} #{password})
+      create_opt = ''
+    end"
+    ruby -e "$AUTH_PARSER" || \
+    (echo "Error creating htpasswd file from credentials '$AUTH_CREDENTIALS'" && exit 1)
+fi
 
 # Parse address of registry server from the linked REGISTRY_PORT environment variable.
 export REGISTRY_SERVER=${REGISTRY_PORT##*/}

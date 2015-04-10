@@ -28,10 +28,14 @@ You need three things to run this proxy in front of a Docker registry:
 
 1. A running [Docker registry](https://github.com/docker/docker-registry).
 2. A directory containing an SSL key pair.
-3. A comma-separated list of colon-delimited basic auth credentials, e.g., "user1:password1,user2:password2".
+3. Auth Credentials
+* A comma-separated list of colon-delimited basic auth credentials, e.g., "user1:password1,user2:password2".
+* Or a htpasswd file created with htpasswd to be mounted
 
 Once you have everything in the list above, you can launch the registry proxy container. Here's an
 example:
+
+With comma-separated list of credentials:
 
 ```bash
 # Run the Docker registry as a 'local' registry with images stored in /tmp.
@@ -51,6 +55,30 @@ AUTH_CREDENTIALS=admin:admin123
 docker run -itd --link docker-registry:registry \
     -p "$EXTERNAL_PORT":443 \
     -e AUTH_CREDENTIALS=$AUTH_CREDENTIALS \
+    -v $KEYPAIR_DIRECTORY:/etc/nginx/ssl \
+    quay.io/aptible/registry-proxy
+```
+
+If you would rather use an htpasswd file directly:
+
+```bash
+# Run the Docker registry as a 'local' registry with images stored in /tmp.
+docker run -itd --name docker-registry -P -e SETTINGS_FLAVOR=local registry
+
+# EXTERNAL_PORT is the port where this proxy (and therefore, the registry) will be exposed.
+EXTERNAL_PORT=46022
+
+# KEYPAIR_DIRECTORY should contain a .crt and .key.
+KEYPAIR_DIRECTORY=/tmp/my-certs
+
+# CREDENTIALS_LOCATION absolute path to credentials file
+CREDENTIALS_LOCATION=/tmp/my-passwords.htpasswd
+
+# Run the registry proxy container. The registry container must be linked in as
+# 'registry' to allow the proxy to discover the address it's listening to.
+docker run -itd --link docker-registry:registry \
+    -p "$EXTERNAL_PORT":443 \
+    -v $CREDENTIALS_LOCATION:/etc/nginx/conf.d/docker-registry-proxy.htpasswd \
     -v $KEYPAIR_DIRECTORY:/etc/nginx/ssl \
     quay.io/aptible/registry-proxy
 ```

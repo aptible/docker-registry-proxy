@@ -1,0 +1,19 @@
+sudo: required
+language: ruby
+
+services:
+  - docker
+
+before_install:
+  - docker build -t quay.io/aptible/registry-proxy .
+
+script:
+  - script/travis-deploy.sh
+
+env:
+  global:
+    - secure: "SIE+8IfG5h4Mw1ctNbOHlUqHb9JmIsR6Leyb8JQL/gKMTKJVhYKC0tUkBOuKhnDIff+ayDf/Cu+9jXLADiseI/OzvMiseTQZnWHzpTmz98+LQN/hQLJpmYTJaYnr4aJ5FJFxSUd0m/S0OCuxfTsGDQmMyx/4C9nT3mg2e4DA6bI="
+    - secure: "xduYjMAp7B4nwLvD8mh/6TRhkh02PqSrundFsrvbuFoJGRtZZNdQMM9zeA8p4zwtgkn905eR++kWgM4eVbHSKPnSEEwdsJY619zMFSC5lv0IRK9fblPUaWtBj+XEJ+qiNOcXtkcN0Fjwh0uIynVuPFruINdzh0+h5X+t/P+BcTc="
+    - secure: "QG1sB16Nwj6xsUt4TOzh5EU9nNdd43bmI302rkCR/tIOHXxCg5tXGdtZ9ub+PPb4W7LDbq8XQKdXXwfEkg3EKx/fjbY7UkAfiFyzpjkVo/L2k7t8cxmIz7lZCx2BbfNMRi4Jp0uDRfLzWHiNZf4r+/AoflLsOU3b2XQzvM+pcR0="
+    - secure: "ef5vlIjljEsNm0t+xjdoKCcjfc8xOazk+xt0YsR9DdZE/T5RTMYETsd3Y5st9XMA7vziK93b53wE9qyy1iP8hUMg9TakWlSn8/KBarn4p9fyswCBqQT4QSCqBnFlA+wSXX04sK3GW1Wh+tl542yjkm7S1oFgW9VfGV/BAwStSms="
+    - secure: "W5e7HMx2NPyuRBGOT0v+rcl0MNj/b6ngZEvY1nrb/l8wGoQH451A0hmNICgqDPMUQs7Aqe8GyS6ee6jeHLXYjXrLxpdngUsOvkoDPY5d9b/gJIHEqWUwlBIgGjgb6FyGhiJQg8KsTpLEFXDW1EtZgpdhiloMlzFcJZ02WaLaf3M="

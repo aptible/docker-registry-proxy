@@ -87,6 +87,30 @@ docker run -itd --link docker-registry:registry \
 
 To build and push this Docker image to Quay, run `make release`.
 
+### Continuous Deployment
+
+The `master` branch of this repo is deployed to the "staging" OpsWorks stack upon a successful build.
+
+### Credentials for CI
+
+This repo contains a `.travis.yml` file that will automatically deploy the application to staging. 
+To do this, our AWS credentials and our quay.io credentials for the "deploy-opsworks" user are encrypted and stored on Travis. 
+To update these credentials, run the following commands (inserting the credential values):
+
+    echo AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... DOCKER_EMAIL=... DOCKER_USERNAME=... DOCKER_PASSWORD=... > .env
+    cat .env | travis encrypt -r aptible/registry-proxy --split
+    
+Update .travis.yml with the output that the command produces. Make sure to prepend each `secure` line with a `-`, and insert
+these lines under the `global` section of the .travis.yml file. It should look something like this:
+
+    env:
+       global:
+         - secure: ...
+         - secure: ...
+         - secure: ...
+         - secure: ...
+         - secure: ...
+
 ## Copyright and License
 
 MIT License, see [LICENSE](LICENSE.md) for details.

@@ -1,17 +1,17 @@
-FROM quay.io/aptible/ubuntu:14.04
+FROM quay.io/aptible/alpine:latest
 
 # Install NGiNX.
-RUN apt-get update
-RUN apt-get install -y software-properties-common \
-    python-software-properties && \
-    add-apt-repository -y ppa:nginx/stable && apt-get update && \
-    apt-get -y install curl ucspi-tcp apache2-utils nginx ruby
+RUN apk-install apache2-utils curl nginx openssl ruby
+
+# Ensure that the nginx user can write to temp paths like client_body_temp_path.
+RUN chown -R nginx:nginx /var/lib/nginx
 
 # Overwrite default nginx config with our config.
-RUN rm /etc/nginx/sites-enabled/*
+RUN mkdir -p /etc/nginx/sites-enabled
+ADD nginx.conf /etc/nginx/nginx.conf
 ADD templates/sites-enabled /
 
-# Add script that starts NGiNX in front of Kibana and tails the NGiNX access/error logs.
+# Add script that starts NGiNX in front of the registries and tails the NGiNX access/error logs.
 ADD bin .
 RUN chmod 700 ./run-docker-registry-proxy.sh
 

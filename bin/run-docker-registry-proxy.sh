@@ -3,7 +3,9 @@
 if [ ! -f /etc/nginx/conf.d/docker-registry-proxy.htpasswd ]; then
   : ${AUTH_CREDENTIALS:?"Error: environment variable AUTH_CREDENTIALS should be populated with a comma-separated list of user:password pairs. Example: \"admin:pa55w0rD\"."}
 fi
-: ${REGISTRY_PORT:?"Error: Missing REGISTRY_PORT environment variable. This variable should be defined by creating a named link 'registry' to another container running a Docker registry."}
+
+# Make sure a registry is linked in to this container
+: ${REGISTRY_PORT:?"Error: a registry container must be linked into this container (--link REGISTRY_CONTAINER_NAME:registry)"}
 
 # Make sure there's exactly one certificate provided and store its path in CERT_FILE
 NUM_CERTS=`ls -l /etc/nginx/ssl/*.crt | wc -l`
@@ -47,13 +49,18 @@ if [ ! -f /etc/nginx/conf.d/docker-registry-proxy.htpasswd ]; then
 fi
 
 # Parse address of registry server from the linked REGISTRY_PORT environment variable.
-export REGISTRY_SERVER=${REGISTRY_PORT##*/}
+export REGISTRY_SERVER="${REGISTRY_PORT##*/}"
 
 # Generate the NGiNX configuration.
-erb -T 2 ./docker-registry-proxy.erb > /etc/nginx/sites-enabled/docker-registry-proxy || \
-(echo "Error creating nginx configuration." && exit 1)
+if [[ "${DOCKER_REGISTRY_TAG:0:1}" == "2" ]]; then
+  export REGISTRY_TEMPLATE=docker-registry-proxy-v2.erb
+else
+  export REGISTRY_TEMPLATE=docker-registry-proxy.erb
+fi
+erb -T 2 "./$REGISTRY_TEMPLATE" > /etc/nginx/sites-enabled/docker-registry-proxy || \
+  (echo "Error creating nginx configuration." && exit 1)
 
 # Start NGiNX, tail error and access logs.
-service nginx start
+/usr/sbin/nginx
 touch /var/log/nginx/access.log /var/log/nginx/error.log
 tail -fq /var/log/nginx/access.log /var/log/nginx/error.log
